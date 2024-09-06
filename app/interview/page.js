@@ -22,21 +22,21 @@ import Groq from "groq-sdk";
 // For PDF parsing
 import * as pdfjsLib from "pdfjs-dist/webpack";
 
-export default function InterviewPage() {
-  const [isClient, setIsClient] = useState(false);
+// export default function InterviewPage() {
+//   const [isClient, setIsClient] = useState(false);
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+//   useEffect(() => {
+//     setIsClient(true);
+//   }, []);
 
-  if (!isClient) {
-    return null;
-  }
+//   if (!isClient) {
+//     return null;
+//   }
 
-  return <MockInterviewDashboard />;
-}
+//   return <MockInterviewDashboard />;
+// }
 
-export function MockInterviewDashboard() {
+export default function MockInterviewDashboard() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState("");
   const conversationHistoryRef = useRef([]);
@@ -462,12 +462,16 @@ export function MockInterviewDashboard() {
       }
     };
 
-    document.addEventListener("click", handleInteraction);
+    if (typeof document !== "undefined") {
+      document.addEventListener("click", handleInteraction);
+    }
 
     return () => {
-      document.removeEventListener("click", handleInteraction);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("click", handleInteraction);
+      }
     };
-  }, []);
+  }, [isAudioInitialized]);
 
   // Function to parse PDFs
   const parsePdf = async (file) => {
