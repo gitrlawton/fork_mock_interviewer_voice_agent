@@ -22,21 +22,21 @@ import Groq from "groq-sdk";
 // For PDF parsing
 import * as pdfjsLib from "pdfjs-dist/webpack";
 
-// export default function InterviewPage() {
-//   const [isClient, setIsClient] = useState(false);
+export default function InterviewPage() {
+  const [isClient, setIsClient] = useState(false);
 
-//   useEffect(() => {
-//     setIsClient(true);
-//   }, []);
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
-//   if (!isClient) {
-//     return null;
-//   }
+  if (!isClient) {
+    return null;
+  }
 
-//   return <MockInterviewDashboard />;
-// }
+  return <MockInterviewDashboard />;
+}
 
-export default function MockInterviewDashboard() {
+export function MockInterviewDashboard() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState("");
   const conversationHistoryRef = useRef([]);
