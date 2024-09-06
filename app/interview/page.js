@@ -1,16 +1,5 @@
 "use client";
 
-if (!Promise.withResolvers) {
-  Promise.withResolvers = function () {
-    let resolve, reject;
-    const promise = new Promise((res, rej) => {
-      resolve = res;
-      reject = rej;
-    });
-    return { promise, resolve, reject };
-  };
-}
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,7 +22,21 @@ import Groq from "groq-sdk";
 // For PDF parsing
 import * as pdfjsLib from "pdfjs-dist/webpack";
 
-export default function MockInterviewDashboard() {
+export default function InterviewPage() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  if (!isClient) {
+    return null;
+  }
+
+  return <MockInterviewDashboard />;
+}
+
+export function MockInterviewDashboard() {
   const [isRecording, setIsRecording] = useState(false);
   const [transcription, setTranscription] = useState("");
   const conversationHistoryRef = useRef([]);
