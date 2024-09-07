@@ -1,21 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
-  swcMinify: true,
   experimental: {
-    appDir: true,
+    serverComponentsExternalPackages: ["pdf-parse"],
   },
-  // This is important for handling client-side only modules
   webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        child_process: false,
-      };
+    if (isServer) {
+      config.externals = ["@nodetls/napi", ...(config.externals || [])];
     }
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      canvas: false,
+      "onnxruntime-node": false,
+    };
     return config;
   },
 };
