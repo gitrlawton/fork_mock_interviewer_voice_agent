@@ -19,7 +19,6 @@ import { doc, writeBatch } from "firebase/firestore";
 import axios from "axios";
 // Groq and Llama
 import Groq from "groq-sdk";
-// For PDF parsing
 
 export default function MockInterviewDashboard() {
   const [isRecording, setIsRecording] = useState(false);
@@ -41,6 +40,9 @@ export default function MockInterviewDashboard() {
   const [jobDescription, setJobDescription] = useState("");
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [activeTab, setActiveTab] = useState("text");
+  //
+  const responseTimeRef = useRef(null);
+  //
 
   const groq = new Groq({
     apiKey: process.env.NEXT_PUBLIC_GROQ_API_KEY,
@@ -85,7 +87,7 @@ export default function MockInterviewDashboard() {
     };
 
     initializeUser();
-  }, [isLoaded, isSignedIn, user]);
+  }, []);
 
   // Generate Report
   const generateReport = async () => {
@@ -93,6 +95,7 @@ export default function MockInterviewDashboard() {
     try {
       // Process the transcript
       const formattedTranscript = conversationHistoryRef.current
+        .slice(1) // Skip the first message, ("Start the Interview")
         .map((msg) => {
           let content = msg.content.trim();
 
@@ -225,6 +228,7 @@ export default function MockInterviewDashboard() {
   const handleEndInterview = async () => {
     stopRecording();
     await generateReport();
+    cleanupAfterInterview();
   };
 
   // Update the persona state change handler to also set the voice
@@ -233,6 +237,16 @@ export default function MockInterviewDashboard() {
     setPersona(value);
     selectedVoiceRef.current = newVoice;
     console.log("Voice changed to:", newVoice);
+  }, []);
+
+  // Function to handle the initial AI greeting
+  const initiateAIGreeting = useCallback(async () => {
+    const greeting = await getLlamaResponse("Start the interview");
+    const audioUrl = await convertTextToSpeech(greeting);
+    if (audioUrl) {
+      setAudioQueue((prevQueue) => [...prevQueue, audioUrl]);
+    }
+    setTranscription(`Interviewer: ${greeting}`);
   }, []);
 
   // Speech to Text
@@ -264,6 +278,9 @@ export default function MockInterviewDashboard() {
             socket.send(event.data);
           });
           mediaRecorder.start(250);
+
+          // Initiate AI greeting when recording starts
+          initiateAIGreeting();
         };
 
         socket.onmessage = async (message) => {
@@ -277,7 +294,7 @@ export default function MockInterviewDashboard() {
         setIsRecording(true);
       })
       .catch((err) => console.error("Error accessing microphone:", err));
-  }, []);
+  }, [initiateAIGreeting]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current) {
@@ -287,12 +304,35 @@ export default function MockInterviewDashboard() {
       socketRef.current.close();
     }
     setIsRecording(false);
-    setProgress(0);
     // Clear interval if it's set
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
       intervalRef.current = null;
     }
+  }, []);
+
+  const cleanupAfterInterview = useCallback(() => {
+    // Reset transcription
+    setTranscription("");
+    // Clear conversation history
+    conversationHistoryRef.current = [];
+    // Reset audio queue
+    setAudioQueue([]);
+    // Reset progress
+    setProgress(0);
+    // Reset audio playback
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+    setIsPlaying(false);
+
+    // Clear the MediaRecorder reference
+    mediaRecorderRef.current = null;
+    // Clear the WebSocket reference
+    socketRef.current = null;
+
+    console.log("Cleanup completed. Ready for a new interview.");
   }, []);
 
   // Text to Text (LLM)
