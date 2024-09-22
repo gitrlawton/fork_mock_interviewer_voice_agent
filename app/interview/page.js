@@ -113,9 +113,6 @@ export default function MockInterviewDashboard() {
         .map((msg) => {
           let content = msg.content.trim();
 
-          // Capitalize the first letter
-          content = content.charAt(0).toUpperCase() + content.slice(1);
-
           if (msg.role === "user") {
             return `You: ${content}`;
           } else if (msg.role === "assistant") {
@@ -281,10 +278,18 @@ export default function MockInterviewDashboard() {
         const mediaRecorder = new MediaRecorder(stream);
         mediaRecorderRef.current = mediaRecorder;
 
-        const socket = new WebSocket("wss://api.deepgram.com/v1/listen", [
-          "token",
-          process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY,
-        ]);
+        const socket = new WebSocket(
+          "wss://api.deepgram.com/v1/listen?" +
+            "model=nova-2-conversationalai&" +
+            "smart_format=true",
+          // "punctuate=true&" +
+          // "utterances=true&utt_split=0.8", //+
+          // "interim_results=true&" +
+          // "utterance_end_ms=1000&" +
+          // "vad_events=true",
+          // "endpointing=100",
+          ["token", process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY]
+        );
         socketRef.current = socket;
 
         socket.onopen = () => {
@@ -395,14 +400,14 @@ export default function MockInterviewDashboard() {
               
               Instructions:
               0. Provide context about your company, and asking the applicant if they have experience relevant to what your company does.
-              1. Keep your remarks brief and to the point, use no more than 2 sentences.
+              1. Keep your remarks brief and to the point, use no more than 3 sentences.
               2. Ask no more than one question per response.
               3. Do not greet the user more than once.
               4. Avoid lengthy introductions or explanations.
               5. If you need more information, ask a single, specific follow-up question.
               6. Always refer to the correct job title in your responses.
               
-              Remember, your goal is to conduct an efficient and focused interview.
+              Remember, your goal is to conduct an efficient and focused interview.  Always end your response with a question.
             `,
           },
           ...updatedHistory,
@@ -461,16 +466,6 @@ export default function MockInterviewDashboard() {
   // Process transcript and generate response
   const processTranscript = async (transcript) => {
     console.log("Processing transcript:", transcript);
-
-    // Capitalize the first letter of the user's sentence
-    const capitalizedTranscript =
-      transcript.charAt(0).toUpperCase() + transcript.slice(1);
-    // Add the user's transcribed text with "Me:" prefix
-    setTranscription((prev) =>
-      prev
-        ? `${prev}\nMe: ${capitalizedTranscript}`
-        : `Me: ${capitalizedTranscript}`
-    );
 
     const aiResponse = await getLlamaResponse(transcript);
 
@@ -652,13 +647,13 @@ export default function MockInterviewDashboard() {
                 <TabsList className="bg-gray-100">
                   <TabsTrigger
                     value="text"
-                    className="data-[state=active]:bg-white data-[state=active]:text-teal-500"
+                    className="data-[state=active]:bg-white data-[state=active]:text-teal-600"
                   >
                     Text Input
                   </TabsTrigger>
                   <TabsTrigger
                     value="file"
-                    className="data-[state=active]:bg-white data-[state=active]:text-teal-500"
+                    className="data-[state=active]:bg-white data-[state=active]:text-teal-600"
                   >
                     File Upload
                   </TabsTrigger>
@@ -719,7 +714,7 @@ export default function MockInterviewDashboard() {
               <RadioGroupItem
                 value="female"
                 id="female"
-                className="border-gray-400 text-teal-500"
+                className="border-gray-400 text-teal-600"
               />
               <Label htmlFor="female" className="text-gray-600">
                 Female Voice
@@ -729,7 +724,7 @@ export default function MockInterviewDashboard() {
               <RadioGroupItem
                 value="male"
                 id="male"
-                className="border-gray-400 text-teal-500"
+                className="border-gray-400 text-teal-600"
               />
               <Label htmlFor="male" className="text-gray-600">
                 Male Voice
@@ -749,7 +744,7 @@ export default function MockInterviewDashboard() {
             />
           </div>
           <Button
-            className="w-full bg-teal-500 hover:bg-teal-600 text-white transition-colors duration-200 ease-in-out transform hover:scale-100 active:scale-95 cursor-pointer"
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white transition-colors duration-200 ease-in-out transform hover:scale-100 active:scale-95 cursor-pointer"
             onClick={startRecording}
             // disabled={
             //   !parsedResumeText || !currentJobDescription || interviewStarted
